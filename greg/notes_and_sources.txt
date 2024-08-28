@@ -1,0 +1,549 @@
+pull census data from census bureau website with census API(population / income / city economic growth / unemployment rate / ...)
+clean the census API data
+outline specifically what we want to show in our final report (rent vs sales prices overtime, available houses over time, average income for an area ...)
+
+added notes from slack. todo: scrub census data for income by zipcode and housing market by zipcode
+
+ensure .env is working properly
+
+construct correct API stuff
+
+
+Subject Tables
+Example Call: api.census.gov/data/2022/acs/acs1/subject?get=NAME,group(S0101)&for=us:1&key=YOUR_KEY_GOES_HERE
+
+Data Profiles
+Example Call: api.census.gov/data/2022/acs/acs1/profile?get=group(DP02)&for=us:1&key=YOUR_KEY_GOES_HERE
+
+Comparison Profile
+Example Call: api.census.gov/data/2022/acs/acs1/cprofile?get=group(CP05)&for=us:1&key=YOUR_KEY_GOES_HERE
+
+detailed tables
+Example Call: api.census.gov/data/2022/acs/acs1?get=NAME,group(B01001)&for=us:1&key=YOUR_KEY_GOES_HERE
+
+https://www.census.gov/quickfacts/fact/table/seattlecitywashington#
+https://data.census.gov/table
+https://data.census.gov/mdat/#/search?ds=ACSPUMS1Y2022
+https://www.census.gov/data/developers/data-sets/acs-1year/notes-on-acs-api-variable-formats.html
+https://www.census.gov/data/developers/data-sets/acs-1year/notes-on-acs-api-variable-types.html
+https://www.census.gov/data/developers/data-sets/acs-1year.html
+https://api.census.gov/data/2020/dec/dhc/examples.html
+https://www.census.gov/data/developers/data-sets/soma.html
+
+# acs dp03 selected economic characteristics, seattle-metro. example zipcode:98001
+https://data.census.gov/table/ACSDP5Y2022.DP03?g=860XX00US98001_040XX00US53&tid=ACSDP5Y2022.DP03
+
+https://data.census.gov/table?g=040XX00US53_310XX00US42660
+
+# hpso1 household pulse survey 2024 seattle metro
+https://data.census.gov/table/HHPULSETIMESERIES.HPS01?g=040XX00US53_310XX00US42660
+
+# i don't even know right now. clues.
+https://data.census.gov/table?t=Financial%20Characteristics:Housing%20Value%20and%20Purchase%20Price:Mortgage%20Costs:Renter%20Costs
+
+
+irs data. demographics and income
+
+https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-statistics-2018-zip-code-data-soi
+https://www.irs.gov/pub/irs-soi/18zp48wa.xlsx
+# 2021 and previous years
+https://www.irs.gov/pub/irs-soi/22dbwashington.xlsx
+2022 and beyond
+
+295	DP1_0132P	Percent!!HOUSEHOLDS BY TYPE!!Total households
+115	DP1_0112C	Count!!RELATIONSHIP!!Total population
+148	DP1_0145C	Count!!HOUSEHOLDS BY TYPE!!Total households!!Households with individuals under 18 years
+149	DP1_0146C	Count!!HOUSEHOLDS BY TYPE!!Total households!!Households with individuals 65 years and over
+
+150	DP1_0147C	Count!!HOUSING OCCUPANCY!!Total housing units
+151	DP1_0148C	Count!!HOUSING OCCUPANCY!!Total housing units!!Occupied housing units
+152	DP1_0149C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units
+153	DP1_0150C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!For rent
+154	DP1_0151C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!Rented, not occupied
+155	DP1_0152C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!For sale only
+156	DP1_0153C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!Sold, not occupied
+157	DP1_0154C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!For seasonal, recreational, or occasional use
+158	DP1_0155C	Count!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!All other vacants
+159	DP1_0156C	Count!!VACANCY RATES!!Homeowner vacancy rate (percent) [4]
+160	DP1_0157C	Count!!VACANCY RATES!!Rental vacancy rate (percent) [5]
+310	DP1_0147P	Percent!!HOUSING OCCUPANCY!!Total housing units
+311	DP1_0148P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Occupied housing units
+312	DP1_0149P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units
+313	DP1_0150P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!For rent
+314	DP1_0151P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!Rented, not occupied
+315	DP1_0152P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!For sale only
+316	DP1_0153P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!Sold, not occupied
+317	DP1_0154P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!For seasonal, recreational, or occasional use
+318	DP1_0155P	Percent!!HOUSING OCCUPANCY!!Total housing units!!Vacant housing units!!All other vacants
+319	DP1_0156P	Percent!!VACANCY RATES!!Homeowner vacancy rate (percent) [4]
+320	DP1_0157P	Percent!!VACANCY RATES!!Rental vacancy rate (percent) [5]
+275	DP1_0112P	Percent!!RELATIONSHIP!!Total population
+276	DP1_0113P	Percent!!RELATIONSHIP!!Total population!!In households
+277	DP1_0114P	Percent!!RELATIONSHIP!!Total population!!In households!!Householder
+
+[4] The homeowner vacancy rate is the proportion of the homeowner inventory that is vacant \"for sale.\" It is computed by dividing the total number of vacant units \"for sale only\" by the sum of owner-occupied units, vacant units that are \"for sale only,\" and vacant units that have been sold but not yet occupied; and then multiplying by 100.<br/><br/>
+
+-------------------------------------------------------------------------------------------------------------
+
+[5] The rental vacancy rate is the proportion of the rental inventory that is vacant \"for rent.\" It is computed by dividing the total number of vacant units \"for rent\" by the sum of the renter-occupied units, vacant units that are \"for rent,\" and vacant units that have been rented but not yet occupied; and then multiplying by 100.<br/><br/>
+
+# ACSDP5Y2022
+
+C17010			Poverty Status in the Past 12 Months of Families by Family Type by Presence of Related Children Under 18 Years  
+C17010			Universe:  Families
+C17010	1	C17010_001	Total:
+
+C17012	 		Poverty Status in the Past 12 Months of Families by Number of Related Children Under 18 Years 
+C17012	 		Universe:  Families
+C17012	1	C17012_001	Total:
+C17012	2	C17012_002	Income in the past 12 months below poverty level:
+C17012	3	C17012_003	No child 
+C17012	4	C17012_004	1 or 2 children 
+C17012	5	C17012_005	3 or 4 children 
+C17012	6	C17012_006	5 or more children  
+C17012	7	C17012_007	Income in the past 12 months at or above poverty level:
+C17012	8	C17012_008	No child 
+C17012	9	C17012_009	1 or 2 children 
+C17012	10	C17012_010	3 or 4 children 
+C17012	11	C17012_011	5 or more children  
+			
+B17013	 		Poverty Status in the Past 12 Months of Families by Household Type by Number of Persons in Family 
+B17013	 		Universe:  Families
+B17013	1	B17013_001	Total:
+B17013	2	B17013_002	Income in the past 12 months below poverty level:
+B17013	3	B17013_003	Married-couple family:
+B17013	4	B17013_004	2 people 
+B17013	5	B17013_005	3 to 4 people 
+B17013	6	B17013_006	5 to 6 people 
+B17013	7	B17013_007	7 or more people 
+B17013	8	B17013_008	Other families:
+B17013	9	B17013_009	 Male householder, no spouse present:
+B17013	10	B17013_010	2 people 
+B17013	11	B17013_011	3 to 4 people 
+B17013	12	B17013_012	5 to 6 people 
+B17013	13	B17013_013	7 or more people 
+B17013	14	B17013_014	Female householder, no spouse present:
+B17013	15	B17013_015	2 people 
+B17013	16	B17013_016	3 to 4 people 
+B17013	17	B17013_017	5 to 6 people 
+B17013	18	B17013_018	7 or more people 
+B17013	19	B17013_019	Income in the past 12 months at or above poverty level:
+B17013	20	B17013_020	Married-couple family:
+B17013	21	B17013_021	2 people 
+B17013	22	B17013_022	3 to 4 people 
+B17013	23	B17013_023	5 to 6 people 
+B17013	24	B17013_024	7 or more people 
+B17013	25	B17013_025	Other families:
+B17013	26	B17013_026	 Male householder, no spouse present:
+B17013	27	B17013_027	2 people 
+B17013	28	B17013_028	3 to 4 people 
+B17013	29	B17013_029	5 to 6 people 
+B17013	30	B17013_030	7 or more people 
+B17013	31	B17013_031	Female householder, no spouse present:
+B17013	32	B17013_032	2 people 
+B17013	33	B17013_033	3 to 4 people 
+B17013	34	B17013_034	5 to 6 people 
+B17013	35	B17013_035	7 or more people 
+ 			
+C17013	 		Poverty Status in the Past 12 Months of Families by Number of Persons in Family 
+C17013	 		Universe:  Families
+C17013	1	C17013_001	Total:
+C17013	2	C17013_002	Income in the past 12 months below poverty level:
+C17013	3	C17013_003	2 persons 
+C17013	4	C17013_004	3 to 4 persons 
+C17013	5	C17013_005	5 to 6 persons 
+C17013	6	C17013_006	7 or more persons  
+C17013	7	C17013_007	Income in the past 12 months at or above poverty level:
+C17013	8	C17013_008	2 persons 
+C17013	9	C17013_009	3 to 4 persons 
+C17013	10	C17013_010	5 to 6 persons 
+C17013	11	C17013_011	7 or more persons  
+			
+B17014	 		Poverty Status in the Past 12 Months of Families by Household Type by Number of Workers in Family 
+B17014	 		Universe:  Families
+B17014	1	B17014_001	Total:
+B17014	2	B17014_002	Income in the past 12 months below poverty level:
+B17014	3	B17014_003	Married-couple family:
+B17014	4	B17014_004	No workers 
+B17014	5	B17014_005	1 worker 
+B17014	6	B17014_006	2 workers 
+B17014	7	B17014_007	3 or more workers 
+B17014	8	B17014_008	Other families:
+B17014	9	B17014_009	 Male householder, no spouse present:
+B17014	10	B17014_010	No workers 
+B17014	11	B17014_011	1 worker 
+B17014	12	B17014_012	2 workers 
+B17014	13	B17014_013	3 or more workers 
+B17014	14	B17014_014	Female householder, no spouse present:
+B17014	15	B17014_015	No workers 
+B17014	16	B17014_016	1 worker 
+B17014	17	B17014_017	2 workers 
+B17014	18	B17014_018	3 or more workers 
+B17014	19	B17014_019	Income in the past 12 months at or above poverty level:
+B17014	20	B17014_020	Married-couple family:
+B17014	21	B17014_021	No workers 
+B17014	22	B17014_022	1 worker 
+B17014	23	B17014_023	2 workers 
+B17014	24	B17014_024	3 or more workers 
+B17014	25	B17014_025	Other families:
+B17014	26	B17014_026	Male householder, no spouse present:
+B17014	27	B17014_027	No workers 
+B17014	28	B17014_028	1 worker 
+B17014	29	B17014_029	2 workers 
+B17014	30	B17014_030	3 or more workers 
+B17014	31	B17014_031	Female householder, no spouse present:
+B17014	32	B17014_032	No workers 
+B17014	33	B17014_033	1 worker 
+B17014	34	B17014_034	2 workers 
+B17014	35	B17014_035	3 or more workers 
+ 			
+C17014	 		Poverty Status in the Past 12 Months of Families by Number of Workers in Family 
+C17014	 		Universe:  Families
+C17014	1	C17014_001	Total:
+C17014	2	C17014_002	Income in the past 12 months below poverty level:
+C17014	3	C17014_003	No workers  
+C17014	4	C17014_004	1 worker  
+C17014	5	C17014_005	2 workers 
+C17014	6	C17014_006	3 or more workers 
+C17014	7	C17014_007	Income in the past 12 months at or above poverty level:
+C17014	8	C17014_008	No workers  
+C17014	9	C17014_009	1 worker  
+C17014	10	C17014_010	2 workers 
+C17014	11	C17014_011	3 or more workers 
+
+C17017	 		Poverty Status in the Past 12 Months by Household Type 
+C17017	 		Universe:  Households
+C17017	1	C17017_001	Total:
+C17017	2	C17017_002	Income in the past 12 months below poverty level:
+C17017	3	C17017_003	Family households:
+C17017	4	C17017_004	Married-couple family
+C17017	5	C17017_005	Other family:
+C17017	6	C17017_006	Male householder, no spouse present
+C17017	7	C17017_007	Female householder, no spouse present
+C17017	8	C17017_008	Nonfamily households:
+C17017	9	C17017_009	Male householder
+C17017	10	C17017_010	Female householder
+C17017	11	C17017_011	Income in the past 12 months at or above poverty level:
+C17017	12	C17017_012	Family households:
+C17017	13	C17017_013	Married-couple family
+C17017	14	C17017_014	Other family:
+C17017	15	C17017_015	Male householder, no spouse present
+C17017	16	C17017_016	Female householder, no spouse present
+C17017	17	C17017_017	Nonfamily households:
+C17017	18	C17017_018	Male householder
+C17017	19	C17017_019	Female householder
+
+B25001	 		Housing Units 
+B25001	 		Universe:  Housing units
+B25001	1	B25001_001	Total
+			
+B25002	 		Occupancy Status 
+B25002	 		Universe:  Housing units
+B25002	1	B25002_001	Total:
+B25002	2	B25002_002	Occupied
+B25002	3	B25002_003	Vacant
+
+B19001	 		Household Income in the Past 12 Months (in 2022 Inflation-Adjusted Dollars) 	1,5
+B19001	 		Universe:  Households	
+B19001	1	B19001_001	Total:	
+B19001	2	B19001_002	Less than $10,000	
+B19001	3	B19001_003	$10,000 to $14,999	
+B19001	4	B19001_004	$15,000 to $19,999	
+B19001	5	B19001_005	$20,000 to $24,999	
+B19001	6	B19001_006	$25,000 to $29,999	
+B19001	7	B19001_007	$30,000 to $34,999	
+B19001	8	B19001_008	$35,000 to $39,999	
+B19001	9	B19001_009	$40,000 to $44,999	
+B19001	10	B19001_010	$45,000 to $49,999	
+B19001	11	B19001_011	$50,000 to $59,999	
+B19001	12	B19001_012	$60,000 to $74,999	
+B19001	13	B19001_013	$75,000 to $99,999	
+B19001	14	B19001_014	$100,000 to $124,999	
+B19001	15	B19001_015	$125,000 to $149,999	
+B19001	16	B19001_016	$150,000 to $199,999	
+B19001	17	B19001_017	$200,000 or more	
+
+B19019	 		Median Household Income in the Past 12 Months (in 2022 Inflation-Adjusted Dollars) by Household Size 	1,5
+B19019	 		Universe:  Households	
+B19019	1	B19019_001	 Total:	
+B19019	2	B19019_002	 1-person households	
+B19019	3	B19019_003	 2-person households	
+B19019	4	B19019_004	 3-person households	
+B19019	5	B19019_005	 4-person households	
+B19019	6	B19019_006	 5-person households	
+B19019	7	B19019_007	 6-person households	
+B19019	8	B19019_008	 7-or-more-person households	
+				
+B19025	 		Aggregate Household Income in the Past 12 Months (in 2022 Inflation-Adjusted Dollars) 	1,5
+B19025	 		Universe:  Households	
+B19025	1	B19025_001	Aggregate household income in the past 12 months (in 2022 inflation-adjusted dollars)	
+
+B19037	 		Age of Householder by Household Income in the Past 12 Months (in 2022 Inflation-Adjusted Dollars) 	1,5
+B19037	 		Universe:  Households	
+B19037	1	B19037_001	Total:	
+B19037	2	B19037_002	Householder under 25 years:	
+B19037	3	B19037_003	Less than $10,000	
+B19037	4	B19037_004	$10,000 to $14,999	
+B19037	5	B19037_005	$15,000 to $19,999	
+B19037	6	B19037_006	$20,000 to $24,999	
+B19037	7	B19037_007	$25,000 to $29,999	
+B19037	8	B19037_008	$30,000 to $34,999	
+B19037	9	B19037_009	$35,000 to $39,999	
+B19037	10	B19037_010	$40,000 to $44,999	
+B19037	11	B19037_011	$45,000 to $49,999	
+B19037	12	B19037_012	$50,000 to $59,999	
+B19037	13	B19037_013	$60,000 to $74,999	
+B19037	14	B19037_014	$75,000 to $99,999	
+B19037	15	B19037_015	$100,000 to $124,999	
+B19037	16	B19037_016	$125,000 to $149,999	
+B19037	17	B19037_017	$150,000 to $199,999	
+B19037	18	B19037_018	$200,000 or more	
+B19037	19	B19037_019	Householder 25 to 44 years:	
+B19037	20	B19037_020	Less than $10,000	
+B19037	21	B19037_021	$10,000 to $14,999	
+B19037	22	B19037_022	$15,000 to $19,999	
+B19037	23	B19037_023	$20,000 to $24,999	
+B19037	24	B19037_024	$25,000 to $29,999	
+B19037	25	B19037_025	$30,000 to $34,999	
+B19037	26	B19037_026	$35,000 to $39,999	
+B19037	27	B19037_027	$40,000 to $44,999	
+B19037	28	B19037_028	$45,000 to $49,999	
+B19037	29	B19037_029	$50,000 to $59,999	
+B19037	30	B19037_030	$60,000 to $74,999	
+B19037	31	B19037_031	$75,000 to $99,999	
+B19037	32	B19037_032	$100,000 to $124,999	
+B19037	33	B19037_033	$125,000 to $149,999	
+B19037	34	B19037_034	$150,000 to $199,999	
+B19037	35	B19037_035	$200,000 or more	
+B19037	36	B19037_036	Householder 45 to 64 years:	
+B19037	37	B19037_037	Less than $10,000	
+B19037	38	B19037_038	$10,000 to $14,999	
+B19037	39	B19037_039	$15,000 to $19,999	
+B19037	40	B19037_040	$20,000 to $24,999	
+B19037	41	B19037_041	$25,000 to $29,999	
+B19037	42	B19037_042	$30,000 to $34,999	
+B19037	43	B19037_043	$35,000 to $39,999	
+B19037	44	B19037_044	$40,000 to $44,999	
+B19037	45	B19037_045	$45,000 to $49,999	
+B19037	46	B19037_046	$50,000 to $59,999	
+B19037	47	B19037_047	$60,000 to $74,999	
+B19037	48	B19037_048	$75,000 to $99,999	
+B19037	49	B19037_049	$100,000 to $124,999	
+B19037	50	B19037_050	$125,000 to $149,999	
+B19037	51	B19037_051	$150,000 to $199,999	
+B19037	52	B19037_052	$200,000 or more	
+B19037	53	B19037_053	Householder 65 years and over:	
+B19037	54	B19037_054	Less than $10,000	
+B19037	55	B19037_055	$10,000 to $14,999	
+B19037	56	B19037_056	$15,000 to $19,999	
+B19037	57	B19037_057	$20,000 to $24,999	
+B19037	58	B19037_058	$25,000 to $29,999	
+B19037	59	B19037_059	$30,000 to $34,999	
+B19037	60	B19037_060	$35,000 to $39,999	
+B19037	61	B19037_061	$40,000 to $44,999	
+B19037	62	B19037_062	$45,000 to $49,999	
+B19037	63	B19037_063	$50,000 to $59,999	
+B19037	64	B19037_064	$60,000 to $74,999	
+B19037	65	B19037_065	$75,000 to $99,999	
+B19037	66	B19037_066	$100,000 to $124,999	
+B19037	67	B19037_067	$125,000 to $149,999	
+B19037	68	B19037_068	$150,000 to $199,999	
+B19037	69	B19037_069	$200,000 or more	
+
+B25070	 		Gross Rent as a Percentage of Household Income in the Past 12 Months 	1,5
+B25070	 		Universe:  Renter-occupied housing units	
+B25070	1	B25070_001	Total:	
+B25070	2	B25070_002	Less than 10.0 percent	
+B25070	3	B25070_003	10.0 to 14.9 percent	
+B25070	4	B25070_004	15.0 to 19.9 percent	
+B25070	5	B25070_005	20.0 to 24.9 percent	
+B25070	6	B25070_006	25.0 to 29.9 percent	
+B25070	7	B25070_007	30.0 to 34.9 percent	
+B25070	8	B25070_008	35.0 to 39.9 percent	
+B25070	9	B25070_009	40.0 to 49.9 percent	
+B25070	10	B25070_010	50.0 percent or more	
+B25070	11	B25070_011	Not computed	
+				
+B25071	 		Median Gross Rent as a Percentage of Household Income in the Past 12 Months (Dollars) 	1,5
+B25071	 		Universe:  Renter-occupied housing units paying cash rent	
+B25071	1	B25071_001	Median gross rent as a percentage of household income	
+				
+B25072	 		Age of Householder by Gross Rent as a Percentage of Household Income in the Past 12 Months 	1,5
+B25072	 		Universe:  Renter-occupied housing units	
+B25072	1	B25072_001	Total:	
+B25072	2	B25072_002	Householder 15 to 24 years:	
+B25072	3	B25072_003	Less than 20.0 percent	
+B25072	4	B25072_004	20.0 to 24.9 percent	
+B25072	5	B25072_005	25.0 to 29.9 percent	
+B25072	6	B25072_006	30.0 to 34.9 percent	
+B25072	7	B25072_007	35.0 percent or more	
+B25072	8	B25072_008	Not computed	
+B25072	9	B25072_009	Householder 25 to 34 years:	
+B25072	10	B25072_010	Less than 20.0 percent	
+B25072	11	B25072_011	20.0 to 24.9 percent	
+B25072	12	B25072_012	25.0 to 29.9 percent	
+B25072	13	B25072_013	30.0 to 34.9 percent	
+B25072	14	B25072_014	35.0 percent or more	
+B25072	15	B25072_015	Not computed	
+B25072	16	B25072_016	Householder 35 to 64 years:	
+B25072	17	B25072_017	Less than 20.0 percent	
+B25072	18	B25072_018	20.0 to 24.9 percent	
+B25072	19	B25072_019	25.0 to 29.9 percent	
+B25072	20	B25072_020	30.0 to 34.9 percent	
+B25072	21	B25072_021	35.0 percent or more	
+B25072	22	B25072_022	Not computed	
+B25072	23	B25072_023	Householder 65 years and over:	
+B25072	24	B25072_024	Less than 20.0 percent	
+B25072	25	B25072_025	20.0 to 24.9 percent	
+B25072	26	B25072_026	25.0 to 29.9 percent	
+B25072	27	B25072_027	30.0 to 34.9 percent	
+B25072	28	B25072_028	35.0 percent or more	
+B25072	29	B25072_029	Not computed	
+				
+B25074	 		Household Income by Gross Rent as a Percentage of Household Income in the Past 12 Months 	1,5
+B25074	 		Universe:  Renter-occupied housing units	
+B25074	1	B25074_001	Total:	
+B25074	2	B25074_002	Less than $10,000:	
+B25074	3	B25074_003	Less than 20.0 percent	
+B25074	4	B25074_004	20.0 to 24.9 percent	
+B25074	5	B25074_005	25.0 to 29.9 percent	
+B25074	6	B25074_006	30.0 to 34.9 percent	
+B25074	7	B25074_007	35.0 to 39.9 percent	
+B25074	8	B25074_008	40.0 to 49.9 percent	
+B25074	9	B25074_009	50.0 percent or more	
+B25074	10	B25074_010	Not computed	
+B25074	11	B25074_011	$10,000 to $19,999:	
+B25074	12	B25074_012	Less than 20.0 percent	
+B25074	13	B25074_013	20.0 to 24.9 percent	
+B25074	14	B25074_014	25.0 to 29.9 percent	
+B25074	15	B25074_015	30.0 to 34.9 percent	
+B25074	16	B25074_016	35.0 to 39.9 percent	
+B25074	17	B25074_017	40.0 to 49.9 percent	
+B25074	18	B25074_018	50.0 percent or more	
+B25074	19	B25074_019	Not computed	
+B25074	20	B25074_020	$20,000 to $34,999:	
+B25074	21	B25074_021	Less than 20.0 percent	
+B25074	22	B25074_022	20.0 to 24.9 percent	
+B25074	23	B25074_023	25.0 to 29.9 percent	
+B25074	24	B25074_024	30.0 to 34.9 percent	
+B25074	25	B25074_025	35.0 to 39.9 percent	
+B25074	26	B25074_026	40.0 to 49.9 percent	
+B25074	27	B25074_027	50.0 percent or more	
+B25074	28	B25074_028	Not computed	
+B25074	29	B25074_029	$35,000 to $49,999:	
+B25074	30	B25074_030	Less than 20.0 percent	
+B25074	31	B25074_031	20.0 to 24.9 percent	
+B25074	32	B25074_032	25.0 to 29.9 percent	
+B25074	33	B25074_033	30.0 to 34.9 percent	
+B25074	34	B25074_034	35.0 to 39.9 percent	
+B25074	35	B25074_035	40.0 to 49.9 percent	
+B25074	36	B25074_036	50.0 percent or more	
+B25074	37	B25074_037	Not computed	
+B25074	38	B25074_038	$50,000 to $74,999:	
+B25074	39	B25074_039	Less than 20.0 percent	
+B25074	40	B25074_040	20.0 to 24.9 percent	
+B25074	41	B25074_041	25.0 to 29.9 percent	
+B25074	42	B25074_042	30.0 to 34.9 percent	
+B25074	43	B25074_043	35.0 to 39.9 percent	
+B25074	44	B25074_044	40.0 to 49.9 percent	
+B25074	45	B25074_045	50.0 percent or more	
+B25074	46	B25074_046	Not computed	
+B25074	47	B25074_047	$75,000 to $99,999:	
+B25074	48	B25074_048	Less than 20.0 percent	
+B25074	49	B25074_049	20.0 to 24.9 percent	
+B25074	50	B25074_050	25.0 to 29.9 percent	
+B25074	51	B25074_051	30.0 to 34.9 percent	
+B25074	52	B25074_052	35.0 to 39.9 percent	
+B25074	53	B25074_053	40.0 to 49.9 percent	
+B25074	54	B25074_054	50.0 percent or more	
+B25074	55	B25074_055	Not computed	
+B25074	56	B25074_056	$100,000 or more:	
+B25074	57	B25074_057	Less than 20.0 percent	
+B25074	58	B25074_058	20.0 to 24.9 percent	
+B25074	59	B25074_059	25.0 to 29.9 percent	
+B25074	60	B25074_060	30.0 to 34.9 percent	
+B25074	61	B25074_061	35.0 to 39.9 percent	
+B25074	62	B25074_062	40.0 to 49.9 percent	
+B25074	63	B25074_063	50.0 percent or more	
+B25074	64	B25074_064	Not computed	
+				
+C25074	 		Household Income by Gross Rent as a Percentage of Household Income in the Past 12 Months 	1
+C25074	 		Universe:  Renter-occupied housing units	
+C25074	1	C25074_001	Total:	
+C25074	2	C25074_002	Less than $10,000:	
+C25074	3	C25074_003	Less than 30.0 percent	
+C25074	4	C25074_004	30.0 percent or more	
+C25074	5	C25074_005	Not computed	
+C25074	6	C25074_006	$10,000 to $19,999:	
+C25074	7	C25074_007	Less than 30.0 percent	
+C25074	8	C25074_008	30.0 percent or more	
+C25074	9	C25074_009	Not computed	
+C25074	10	C25074_010	$20,000 to $34,999:	
+C25074	11	C25074_011	Less than 30.0 percent	
+C25074	12	C25074_012	30.0 percent or more	
+C25074	13	C25074_013	Not computed	
+C25074	14	C25074_014	$35,000 to $49,999:	
+C25074	15	C25074_015	Less than 30.0 percent	
+C25074	16	C25074_016	30.0 percent or more	
+C25074	17	C25074_017	Not computed	
+C25074	18	C25074_018	$50,000 to $74,999:	
+C25074	19	C25074_019	Less than 30.0 percent	
+C25074	20	C25074_020	30.0 percent or more	
+C25074	21	C25074_021	Not computed	
+C25074	22	C25074_022	$75,000 or more:	
+C25074	23	C25074_023	Less than 30.0 percent	
+C25074	24	C25074_024	30.0 percent or more	
+C25074	25	C25074_025	Not computed	
+				
+B25075	 		Value 	1,5
+B25075	 		Universe:  Owner-occupied housing units	
+B25075	1	B25075_001	Total:	
+B25075	2	B25075_002	Less than $10,000	
+B25075	3	B25075_003	$10,000 to $14,999	
+B25075	4	B25075_004	$15,000 to $19,999	
+B25075	5	B25075_005	$20,000 to $24,999	
+B25075	6	B25075_006	$25,000 to $29,999	
+B25075	7	B25075_007	$30,000 to $34,999	
+B25075	8	B25075_008	$35,000 to $39,999	
+B25075	9	B25075_009	$40,000 to $49,999	
+B25075	10	B25075_010	$50,000 to $59,999	
+B25075	11	B25075_011	$60,000 to $69,999	
+B25075	12	B25075_012	$70,000 to $79,999	
+B25075	13	B25075_013	$80,000 to $89,999	
+B25075	14	B25075_014	$90,000 to $99,999	
+B25075	15	B25075_015	$100,000 to $124,999	
+B25075	16	B25075_016	$125,000 to $149,999	
+B25075	17	B25075_017	$150,000 to $174,999	
+B25075	18	B25075_018	$175,000 to $199,999	
+B25075	19	B25075_019	$200,000 to $249,999	
+B25075	20	B25075_020	$250,000 to $299,999	
+B25075	21	B25075_021	$300,000 to $399,999	
+B25075	22	B25075_022	$400,000 to $499,999	
+B25075	23	B25075_023	$500,000 to $749,999	
+B25075	24	B25075_024	$750,000 to $999,999	
+B25075	25	B25075_025	$1,000,000 to $1,499,999	
+B25075	26	B25075_026	$1,500,000 to $1,999,999	
+B25075	27	B25075_027	$2,000,000 or more	
+				
+C25075	 		Value 	1
+C25075	 		Universe:  Owner-occupied housing units	
+C25075	1	C25075_001	Total:	
+C25075	2	C25075_002	Less than $50,000	
+C25075	3	C25075_003	$50,000 to $99,999	
+C25075	4	C25075_004	$100,000 to $149,999	
+C25075	5	C25075_005	$150,000 to $199,999	
+C25075	6	C25075_006	$200,000 to $299,999	
+C25075	7	C25075_007	$300,000 to $499,999	
+C25075	8	C25075_008	$500,000 to $999,999	
+C25075	9	C25075_009	$1,000,000 or more	
+				
+B25076	 		Lower Value Quartile (Dollars) 	1,5
+B25076	 		Universe:  Owner-occupied housing units	
+B25076	1	B25076_001	Lower value quartile (dollars)	
+				
+B25077	 		Median Value (Dollars) 	1,5
+B25077	 		Universe:  Owner-occupied housing units	
+B25077	1	B25077_001	Median value (dollars)	
+
+# i wish i found this site a week ago
+https://censusreporter.org/topics/income/
